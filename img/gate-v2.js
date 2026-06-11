@@ -335,9 +335,8 @@
   }
 
   // Exponer API pública para abrir el gate desde otros elementos (banner sticky, CTAs, etc)
+  // SIEMPRE abre, aunque el usuario ya esté unlocked (por si quiere recuperar acceso)
   window.gambetaOpenGate = function(){
-    // Si ya entrego email, no abrir gate
-    try { if (localStorage.getItem('gambeta_lead_ok') === '1') return false; } catch(e){}
     showGate();
     if (window.gtag) gtag('event','gate_manual_open',{event_category:'mundial-gate', event_label: source});
     return true;
