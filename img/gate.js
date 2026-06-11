@@ -198,6 +198,33 @@
   function init(){
     window.addEventListener('scroll', onScrollThrottled, { passive: true });
     onScroll();
+    // Click en cualquier elemento blureado/tachado abre el gate
+    document.addEventListener('click', function(e){
+      try { if (localStorage.getItem('gambeta_lead_ok') === '1') return; } catch(_){}
+      var el = e.target;
+      var hops = 0;
+      while (el && hops < 4){
+        // 1) inline filter:blur
+        var inline = (el.getAttribute && el.getAttribute('style')) || '';
+        if (inline.indexOf('blur(') !== -1) { e.preventDefault(); showGate(); if(window.gtag) gtag('event','spoiler_click_open_gate',{event_category:'mundial-gate'}); return; }
+        // 2) data-spoiler attribute
+        if (el.hasAttribute && el.hasAttribute('data-spoiler')) { e.preventDefault(); showGate(); if(window.gtag) gtag('event','spoiler_click_open_gate',{event_category:'mundial-gate'}); return; }
+        // 3) computed filter
+        try {
+          var cs = window.getComputedStyle(el);
+          if (cs && cs.filter && cs.filter.indexOf('blur') !== -1) { e.preventDefault(); showGate(); if(window.gtag) gtag('event','spoiler_click_open_gate',{event_category:'mundial-gate'}); return; }
+        } catch(_){}
+        // 4) si el contenido es ███ caracteres (tachado)
+        var txt = (el.textContent || '').trim();
+        if (txt && /^[█▌▐▓?]+$/.test(txt.replace(/\s/g, ''))) { e.preventDefault(); showGate(); if(window.gtag) gtag('event','spoiler_click_open_gate',{event_category:'mundial-gate'}); return; }
+        el = el.parentElement;
+        hops++;
+      }
+    }, true);
+    // Cursor pointer + hover hint en elementos blureados/data-spoiler
+    var style = document.createElement('style');
+    style.textContent = '[data-spoiler],[style*="blur("]{cursor:pointer!important;transition:filter .2s ease;}[data-spoiler]:hover,[style*="blur("]:hover{filter:brightness(1.2)!important;}';
+    document.head.appendChild(style);
   }
   if (document.readyState === 'complete' || document.readyState === 'interactive'){
     setTimeout(init, 300);
