@@ -176,7 +176,7 @@
       });
       var data = await res.json();
       if (data && data.ok){
-        try { localStorage.setItem('gambeta_lead_ok', '1'); } catch(e){}
+        try { localStorage.setItem('gambeta_lead_ok', '1'); document.body.classList.add('unlocked'); } catch(e){}
         if (window.gtag) gtag('event','lead_capture',{event_category:'mundial-gate', event_label: source});
         location.href = (data.redirect || '/mundial/eleccion');
       } else {
@@ -198,30 +198,101 @@
   function init(){
     window.addEventListener('scroll', onScrollThrottled, { passive: true });
     onScroll();
-    // Click en cualquier elemento blureado/tachado abre el gate
+
+    // === Inyectar CSS premium para blurs ===
+    var style = document.createElement('style');
+    style.textContent = [
+      '.has-blur-content{position:relative;cursor:pointer;transition:transform .2s ease}',
+      '.has-blur-content:hover{transform:translateY(-2px)}',
+      '.has-blur-content::after{content:"";position:absolute;inset:0;background:radial-gradient(circle at center,rgba(212,175,55,.12) 0%,rgba(0,0,0,0) 60%);pointer-events:none;z-index:2;border-radius:inherit;opacity:0;transition:opacity .25s ease}',
+      '.has-blur-content:hover::after{opacity:1}',
+      '.unlock-cta{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:5;background:linear-gradient(135deg,#f5cd47 0%,#d4af37 100%);color:#0a0a0f;padding:10px 16px;border-radius:999px;font-size:.78rem;font-weight:900;letter-spacing:.5px;text-transform:uppercase;box-shadow:0 8px 24px rgba(212,175,55,.4),0 2px 6px rgba(0,0,0,.4);display:inline-flex;align-items:center;gap:6px;opacity:.92;transition:all .25s ease;pointer-events:none;white-space:nowrap}',
+      '.unlock-cta::before{content:"🔒";font-size:.85rem}',
+      '.has-blur-content:hover .unlock-cta{opacity:1;transform:translate(-50%,-50%) scale(1.06);box-shadow:0 12px 32px rgba(212,175,55,.55),0 2px 6px rgba(0,0,0,.5)}',
+      '.unlock-mini{display:inline-flex;align-items:center;gap:4px;background:rgba(212,175,55,.18);border:1px solid rgba(212,175,55,.45);color:#f5cd47;padding:1px 8px;border-radius:999px;font-size:.7rem;font-weight:800;margin-left:4px;vertical-align:middle;cursor:pointer;transition:all .2s}',
+      '.unlock-mini:hover{background:rgba(212,175,55,.32)}',
+      'body.unlocked [style*="blur("],body.unlocked [data-spoiler]{filter:none!important;transform:none!important;user-select:auto!important}',
+      'body.unlocked .has-blur-content::after,body.unlocked .unlock-cta,body.unlocked .unlock-mini{display:none!important}',
+      'body.unlocked img[data-spoiler],body.unlocked div[data-spoiler]{filter:none!important}'
+    ].join('');
+    document.head.appendChild(style);
+
+    // === Si ya está unlocked, marcar body y salir ===
+    try {
+      if (localStorage.getItem('gambeta_lead_ok') === '1') {
+        document.body.classList.add('unlocked');
+        return;
+      }
+    } catch(_){}
+
+    // === Marcar cards que contienen blureados ===
+    function markBlurCards(){
+      var candidates = document.querySelectorAll(
+        '.premio-card, .team-card, .bar-row, .match-card, .stat-card, .hero-img-wrap, .group-card, .candidata-card'
+      );
+      candidates.forEach(function(card){
+        var hasBlur = card.querySelector('[data-spoiler], [style*="blur("]');
+        if (hasBlur && !card.classList.contains('has-blur-content')){
+          card.classList.add('has-blur-content');
+          // Añadir cartel DESBLOQUEAR centrado
+          if (!card.querySelector('.unlock-cta')){
+            var cta = document.createElement('div');
+            cta.className = 'unlock-cta';
+            cta.textContent = 'Desbloquear';
+            card.appendChild(cta);
+          }
+        }
+      });
+      // Auto-detectar otros containers que tengan blureados directos
+      var allBlurs = document.querySelectorAll('[data-spoiler], [style*="blur("]');
+      allBlurs.forEach(function(b){
+        // Buscar primer padre con position relative o un block container claro
+        var p = b.parentElement;
+        var hops = 0;
+        while (p && hops < 3){
+          if (p.classList.contains('has-blur-content')) return;
+          var tag = (p.tagName||'').toLowerCase();
+          // Si es un container claro y NO es la card principal del flujo
+          if (tag === 'div' && p.offsetWidth > 80 && p.offsetHeight > 40 && !p.querySelector('.unlock-cta')){
+            // Verificar que sea un contenedor cohesivo (no body)
+            if (p !== document.body && p.tagName !== 'SECTION' && p.tagName !== 'MAIN'){
+              p.classList.add('has-blur-content');
+              var cta = document.createElement('div');
+              cta.className = 'unlock-cta';
+              cta.textContent = 'Desbloquear';
+              p.appendChild(cta);
+              return;
+            }
+          }
+          p = p.parentElement;
+          hops++;
+        }
+      });
+    }
+    markBlurCards();
+
+    // === Click en cualquier elemento blureado/cartel abre el gate ===
     document.addEventListener('click', function(e){
       try { if (localStorage.getItem('gambeta_lead_ok') === '1') return; } catch(_){}
-      // No interceptar clicks sobre el gate, sticky bar, CTAs, links de nav
       var ignore = e.target.closest && e.target.closest('#mundial-gate-overlay, .gate-form, .lead-form-cta, .sticky-btn, .sticky-bar, a.brand, nav a, header a, button[type="submit"]');
       if (ignore) return;
       var el = e.target;
       var hops = 0;
       function isBlurredDeep(node){
         if (!node) return false;
-        // direct attrs
+        if (node.classList && node.classList.contains('has-blur-content')) return true;
+        if (node.classList && (node.classList.contains('unlock-cta') || node.classList.contains('unlock-mini'))) return true;
         var inline = (node.getAttribute && node.getAttribute('style')) || '';
         if (inline.indexOf('blur(') !== -1) return true;
         if (node.hasAttribute && node.hasAttribute('data-spoiler')) return true;
         try { var cs = window.getComputedStyle(node); if (cs && cs.filter && cs.filter.indexOf('blur') !== -1) return true; } catch(_){}
         var txt = (node.textContent || '').trim();
         if (txt && /^[█▌▐▓?]+$/.test(txt.replace(/\s/g, ''))) return true;
-        // descendant blur (la card padre contiene algun blureado)
         try { if (node.querySelector && node.querySelector('[data-spoiler], [style*="blur("]')) return true; } catch(_){}
         return false;
       }
       while (el && hops < 5){
         if (isBlurredDeep(el)) {
-          // si es boton/link interactivo legitimo, no interceptar
           var tag = (el.tagName||'').toLowerCase();
           if (tag !== 'button' && tag !== 'a' && tag !== 'input' && tag !== 'select' && tag !== 'textarea') {
             e.preventDefault(); e.stopPropagation(); showGate();
@@ -233,10 +304,6 @@
         hops++;
       }
     }, true);
-    // Cursor pointer + hover hint en elementos blureados/data-spoiler
-    var style = document.createElement('style');
-    style.textContent = '[data-spoiler],[style*="blur("]{cursor:pointer!important;transition:filter .2s ease;}[data-spoiler]:hover,[style*="blur("]:hover{filter:brightness(1.2)!important;}';
-    document.head.appendChild(style);
   }
   if (document.readyState === 'complete' || document.readyState === 'interactive'){
     setTimeout(init, 300);
