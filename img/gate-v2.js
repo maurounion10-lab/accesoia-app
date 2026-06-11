@@ -187,7 +187,7 @@
       }
     } catch (ex) {
       var detail = ex && (ex.name + ': ' + ex.message) || 'unknown';
-      err.textContent = 'Conexion bloqueada (' + detail + '). Probable causa: adblocker o extension bloquea workers.dev. Desactivá tu adblocker para este sitio.';
+      err.textContent = 'Error temporal (' + detail + '). Probá de nuevo en unos segundos, o usá Telegram mientras tanto.';
       err.classList.add('show');
       btn.disabled = false;
       btn.textContent = 'DESBLOQUEAR LAS 2 IAs →';
