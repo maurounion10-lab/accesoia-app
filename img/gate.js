@@ -176,7 +176,7 @@
       });
       var data = await res.json();
       if (data && data.ok){
-        try { localStorage.setItem('gambeta_lead_ok', '1'); document.body.classList.add('unlocked'); } catch(e){}
+        try { localStorage.setItem('gambeta_lead_ok', '1'); if (window.__gambetaUnlockReal) window.__gambetaUnlockReal(); else document.body.classList.add('unlocked'); } catch(e){}
         if (window.gtag) gtag('event','lead_capture',{event_category:'mundial-gate', event_label: source});
         location.href = (data.redirect || '/mundial/eleccion');
       } else {
@@ -217,13 +217,36 @@
     ].join('');
     document.head.appendChild(style);
 
-    // === Si ya está unlocked, marcar body y salir ===
+    // === Helper: reemplazar texto tachado por valor real ===
+    function unlockRealValues(){
+      document.body.classList.add('unlocked');
+      var nodes = document.querySelectorAll('[data-real]');
+      nodes.forEach(function(n){
+        var real = n.getAttribute('data-real');
+        if (!real) return;
+        // Si el nodo tiene un <small> hijo, conservarlo
+        var small = n.querySelector('small');
+        if (small){
+          // textContent del nodo principal sin tocar small
+          // Limpiar y reagregar
+          while (n.firstChild && n.firstChild.nodeType === 3) n.removeChild(n.firstChild);
+          n.insertBefore(document.createTextNode(real), n.firstChild);
+        } else {
+          n.textContent = real;
+        }
+      });
+    }
+
+    // === Si ya está unlocked, marcar body y desbloquear textos ===
     try {
       if (localStorage.getItem('gambeta_lead_ok') === '1') {
-        document.body.classList.add('unlocked');
+        unlockRealValues();
         return;
       }
     } catch(_){}
+
+    // Exponer para uso post-mail
+    window.__gambetaUnlockReal = unlockRealValues;
 
     // === Marcar cards que contienen blureados ===
     function markBlurCards(){
