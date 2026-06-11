@@ -1,0 +1,6 @@
+User-agent: *
+Disallow: /eleccion
+Disallow: /gracias
+Allow: /
+
+Sitemap: https://accesoia.app/sitemap.xml
