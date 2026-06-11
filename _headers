@@ -1,0 +1,6 @@
+# Forzar no-cache en gate.js para que los cambios se reflejen al instante
+/img/gate.js
+  Cache-Control: no-cache, must-revalidate, max-age=0
+
+/img/*
+  Cache-Control: public, max-age=3600
