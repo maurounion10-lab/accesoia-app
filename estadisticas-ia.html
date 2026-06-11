@@ -516,6 +516,33 @@ footer.site-foot a { color: var(--gold); margin: 0 10px; text-decoration: none; 
 .lead-form-msg { font-size: 0.78rem; color: rgba(255,255,255,0.55); margin-top: 6px; min-height: 1.2em; }
 .lead-form-msg.error { color: #ff8585; }
 .lead-form-msg.ok { color: #00e676; }
+
+/* Nuevo: CTA inline grande y dorado que abre el gate */
+.lead-form-cta {
+  display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+  background: linear-gradient(135deg, #f5cd47 0%, #d4af37 100%);
+  color: #0a0a0f; border: 0; cursor: pointer;
+  padding: 16px 28px; border-radius: 12px;
+  font-family: inherit; font-weight: 900; font-size: 1.02rem;
+  letter-spacing: 0.5px; text-transform: uppercase;
+  box-shadow: 0 8px 20px rgba(212,175,55,0.32), 0 0 0 1px rgba(255,255,255,0.08) inset;
+  transition: transform .15s ease, box-shadow .15s ease, background .15s ease;
+  min-width: 220px; white-space: nowrap;
+}
+.lead-form-cta::after {
+  content: "→"; font-size: 1.1rem; font-weight: 900;
+  transition: transform .2s ease;
+}
+.lead-form-cta:hover {
+  transform: translateY(-2px);
+  background: linear-gradient(135deg, #ffe04a 0%, #f5cd47 100%);
+  box-shadow: 0 14px 30px rgba(212,175,55,0.45), 0 0 0 1px rgba(255,255,255,0.10) inset;
+}
+.lead-form-cta:hover::after { transform: translateX(4px); }
+.lead-form-cta:active { transform: translateY(0); }
+@media (max-width: 520px) {
+  .lead-form-cta { width: 100%; padding: 16px 22px; font-size: 0.98rem; }
+}
 @media (max-width: 520px) {
   .lead-form { width: 100%; max-width: 100%; flex-direction: column; padding: 8px; }
   .lead-form input[type="email"] { padding: 12px 8px; }
@@ -1059,6 +1086,6 @@ footer.site-foot a { color: var(--gold); margin: 0 10px; text-decoration: none; 
 
 
 
-<script src="/img/gate.js" defer></script>
+<script src="/img/gate.js?v=4" defer></script>
 </body>
 </html>
