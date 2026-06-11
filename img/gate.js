@@ -201,22 +201,34 @@
     // Click en cualquier elemento blureado/tachado abre el gate
     document.addEventListener('click', function(e){
       try { if (localStorage.getItem('gambeta_lead_ok') === '1') return; } catch(_){}
+      // No interceptar clicks sobre el gate, sticky bar, CTAs, links de nav
+      var ignore = e.target.closest && e.target.closest('#mundial-gate-overlay, .gate-form, .lead-form-cta, .sticky-btn, .sticky-bar, a.brand, nav a, header a, button[type="submit"]');
+      if (ignore) return;
       var el = e.target;
       var hops = 0;
-      while (el && hops < 4){
-        // 1) inline filter:blur
-        var inline = (el.getAttribute && el.getAttribute('style')) || '';
-        if (inline.indexOf('blur(') !== -1) { e.preventDefault(); showGate(); if(window.gtag) gtag('event','spoiler_click_open_gate',{event_category:'mundial-gate'}); return; }
-        // 2) data-spoiler attribute
-        if (el.hasAttribute && el.hasAttribute('data-spoiler')) { e.preventDefault(); showGate(); if(window.gtag) gtag('event','spoiler_click_open_gate',{event_category:'mundial-gate'}); return; }
-        // 3) computed filter
-        try {
-          var cs = window.getComputedStyle(el);
-          if (cs && cs.filter && cs.filter.indexOf('blur') !== -1) { e.preventDefault(); showGate(); if(window.gtag) gtag('event','spoiler_click_open_gate',{event_category:'mundial-gate'}); return; }
-        } catch(_){}
-        // 4) si el contenido es ███ caracteres (tachado)
-        var txt = (el.textContent || '').trim();
-        if (txt && /^[█▌▐▓?]+$/.test(txt.replace(/\s/g, ''))) { e.preventDefault(); showGate(); if(window.gtag) gtag('event','spoiler_click_open_gate',{event_category:'mundial-gate'}); return; }
+      function isBlurredDeep(node){
+        if (!node) return false;
+        // direct attrs
+        var inline = (node.getAttribute && node.getAttribute('style')) || '';
+        if (inline.indexOf('blur(') !== -1) return true;
+        if (node.hasAttribute && node.hasAttribute('data-spoiler')) return true;
+        try { var cs = window.getComputedStyle(node); if (cs && cs.filter && cs.filter.indexOf('blur') !== -1) return true; } catch(_){}
+        var txt = (node.textContent || '').trim();
+        if (txt && /^[█▌▐▓?]+$/.test(txt.replace(/\s/g, ''))) return true;
+        // descendant blur (la card padre contiene algun blureado)
+        try { if (node.querySelector && node.querySelector('[data-spoiler], [style*="blur("]')) return true; } catch(_){}
+        return false;
+      }
+      while (el && hops < 5){
+        if (isBlurredDeep(el)) {
+          // si es boton/link interactivo legitimo, no interceptar
+          var tag = (el.tagName||'').toLowerCase();
+          if (tag !== 'button' && tag !== 'a' && tag !== 'input' && tag !== 'select' && tag !== 'textarea') {
+            e.preventDefault(); e.stopPropagation(); showGate();
+            if(window.gtag) gtag('event','spoiler_click_open_gate',{event_category:'mundial-gate'});
+            return;
+          }
+        }
         el = el.parentElement;
         hops++;
       }
