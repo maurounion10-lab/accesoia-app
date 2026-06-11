@@ -169,7 +169,7 @@
     btn.disabled = true;
     btn.textContent = 'ENVIANDO…';
     try {
-      var res = await fetch('https://apuestas-api.mauro-union10.workers.dev/api/lead-signup', {
+      var res = await fetch('https://api.accesoia.app/api/lead-signup', {
         method:'POST',
         headers:{'Content-Type':'application/json'},
         body: JSON.stringify({ email: email, source: source, landing: landing })
