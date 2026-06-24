@@ -6,7 +6,26 @@
  */
 (function(){
   'use strict';
-  try { if (localStorage.getItem('gambeta_lead_ok') === '1') return; } catch(e){}
+
+  // 🆕 (23-jun) FIX: exponer la API ANTES del early return.
+  // Antes, si el usuario ya tenía gambeta_lead_ok='1' el IIFE retornaba
+  // y window.gambetaOpenGate quedaba undefined → los 7 botones "Obtener
+  // Acceso IA" no hacían nada.
+  var _alreadyUnlocked = false;
+  try { _alreadyUnlocked = (localStorage.getItem('gambeta_lead_ok') === '1'); } catch(e){}
+
+  if (_alreadyUnlocked) {
+    // Usuario ya tiene acceso → los botones "Obtener Acceso IA" abren un
+    // diálogo simple agradeciendo + opción de reset
+    window.gambetaOpenGate = function(){
+      var ok = confirm('Ya tenés acceso a las 2 IAs ✓\n\n¿Querés volver a registrarte con otro email?');
+      if (ok) {
+        try { localStorage.removeItem('gambeta_lead_ok'); } catch(e){}
+        location.reload();
+      }
+    };
+    return;
+  }
 
   var path = location.pathname.replace(/\/$/, '');
   var landing = path.split('/').pop() || 'landing';
@@ -94,6 +113,17 @@
     document.body.appendChild(bd);
     document.getElementById('gate-close').addEventListener('click', closeGate);
     document.getElementById('gate-form').addEventListener('submit', submitGate);
+
+    // 🆕 (23-jun) cierre por click en backdrop (fuera del card)
+    bd.addEventListener('click', function(ev){
+      if (ev.target === bd) closeGate();
+    });
+
+    // 🆕 (23-jun) cierre con tecla Escape
+    document.addEventListener('keydown', function(ev){
+      if (ev.key === 'Escape' && gateVisible) closeGate();
+    });
+
     gateInjected = true;
   }
 
