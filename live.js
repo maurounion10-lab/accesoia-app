@@ -75,7 +75,19 @@
         insight: 'Nuestra IA marca a ' + favName + ' como favorito en este partido (' + favPct + '% de probabilidad), ponderando forma reciente, nivel individual y contexto del cruce.'
       };
     }
-    return { champ: champ, acc30: acc30, accAll: accAll, daily: daily, totalPicks: picks.length };
+    // Partidos vigentes (pendientes WC) para el bloque "El Mundial ahora"
+    var upcoming = picks.filter(function (p) { return p.result === 'pending' && p._wcMatch; })
+      .sort(function (a, b) { return tsOf(a) - tsOf(b); })
+      .map(function (p) {
+        var fh = (p.probH || 0) >= (p.probA || 0);
+        var dt = new Date(tsOf(p));
+        return {
+          home: p.home, away: p.away, fav: fh ? p.home : p.away, favPct: Math.max(p.probH || 0, p.probA || 0),
+          dateStr: isFinite(dt.getTime()) ? dt.toLocaleDateString('es-AR', { day: '2-digit', month: 'short' }) : ''
+        };
+      });
+
+    return { champ: champ, acc30: acc30, accAll: accAll, daily: daily, upcoming: upcoming, totalPicks: picks.length };
   }
 
   function setAll(sel, fn) { var els = document.querySelectorAll(sel); for (var i = 0; i < els.length; i++) fn(els[i]); }
@@ -102,6 +114,19 @@
       setAll('[data-live="pick-conf"]', function (el) { el.textContent = '✓ ' + dp.confPct + '% de probabilidad IA'; });
       setAll('[data-live="pick-info"]', function (el) { el.textContent = '📅 ' + dp.dateStr + ' · 🏟️ Mundial 2026'; });
       setAll('[data-live="pick-insight"]', function (el) { el.innerHTML = '<strong>Análisis IA:</strong> ' + dp.insight; });
+    }
+    // Bloque "El Mundial ahora": favorito al título + partidos vigentes
+    if (top) {
+      setAll('[data-live="stage-fav-team"]', function (el) { el.textContent = top.team; });
+      setAll('[data-live="stage-fav-pct"]', function (el) { el.textContent = top.pct + '%'; });
+    }
+    if (data.upcoming && data.upcoming.length) {
+      var html = data.upcoming.map(function (m) {
+        return '<div class="stage-match"><span class="sm-teams">' + flag(m.home) + ' <b>' + m.home + '</b> vs <b>' + m.away + '</b> ' + flag(m.away) + '</span>' +
+          '<span class="sm-fav">Favorito IA: ' + m.fav + ' · ' + m.favPct + '%</span>' +
+          (m.dateStr ? '<span class="sm-date">' + m.dateStr + '</span>' : '') + '</div>';
+      }).join('');
+      setAll('[data-live="stage-matches"]', function (el) { el.innerHTML = html; });
     }
     try { window.dispatchEvent(new CustomEvent('accesoia:live', { detail: data })); } catch (e) {}
   }

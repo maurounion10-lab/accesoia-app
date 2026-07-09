@@ -584,7 +584,22 @@ footer.site-foot a { color: var(--gold); margin: 0 10px; text-decoration: none; 
 
 <main>
 
-<section class="block" id="predicciones">
+<section class="block" id="ahora">
+  <div class="section-head"><span class="kicker">El Mundial ahora</span><h2>La IA, en la recta final del Mundial</h2></div>
+  <div style="max-width:640px;margin:0 auto;text-align:center">
+    <div style="font-size:1.05rem;color:var(--text-mute);margin-bottom:18px">Favorita al título según nuestra IA: <strong style="color:#f5cd47" data-live="stage-fav-team">España</strong> · <strong data-live="stage-fav-pct">18%</strong> de probabilidad</div>
+    <div data-live="stage-matches" style="display:flex;flex-direction:column;gap:10px">
+      <div class="stage-match"><span class="sm-teams">🇪🇸 <b>España</b> vs <b>Bélgica</b> 🇧🇪</span> <span class="sm-fav">Favorito IA: España · 58%</span></div>
+    </div>
+  </div>
+</section>
+<style>
+.stage-match{display:flex;flex-wrap:wrap;gap:6px 16px;align-items:center;justify-content:center;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:14px;padding:14px 18px}
+.stage-match .sm-teams{font-size:1.05rem;font-weight:700}
+.stage-match .sm-fav{font-size:.85rem;color:#4ade80;font-weight:600}
+.stage-match .sm-date{font-size:.8rem;color:var(--text-mute)}
+</style>
+<section class="block" id="predicciones" style="display:none">
   <div class="section-head">
     <span class="kicker">Predicciones IA</span>
     <h2>Top 8 candidatas al título</h2>
@@ -662,7 +677,7 @@ footer.site-foot a { color: var(--gold); margin: 0 10px; text-decoration: none; 
   </div>
 </div>
 
-<section class="block" id="premios">
+<section class="block" id="premios" style="display:none">
   <div class="section-head">
     <span class="kicker">Premios individuales</span>
     <h2>Los favoritos según la IA</h2>
@@ -747,7 +762,7 @@ footer.site-foot a { color: var(--gold); margin: 0 10px; text-decoration: none; 
   </div>
 </div>
 
-<section class="block" id="calendario">
+<section class="block" id="calendario" style="display:none">
   <div class="section-head">
     <span class="kicker">Calendario</span>
     <h2>Primera semana del Mundial</h2>
@@ -853,7 +868,7 @@ footer.site-foot a { color: var(--gold); margin: 0 10px; text-decoration: none; 
   </div>
 </div>
 
-<section class="block" id="estadisticas">
+<section class="block" id="estadisticas" style="display:none">
   <div class="section-head">
     <span class="kicker">Estadísticas IA</span>
     <h2>Top 8 selecciones por puntaje IA</h2>
@@ -1087,6 +1102,6 @@ footer.site-foot a { color: var(--gold); margin: 0 10px; text-decoration: none; 
 
 
 <script src="/img/gate-v2.js?v=1782300374" defer></script>
-<script src="/live.js?v=1" defer></script>
+<script src="/live.js?v=2" defer></script>
 </body>
 </html>
