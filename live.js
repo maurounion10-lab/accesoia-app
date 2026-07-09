@@ -24,6 +24,21 @@
   function impliedPct(odds) { var o = num(odds); return (o && o > 1) ? Math.round(100 / o) : null; }
   function tsOf(p) { return p.commenceTs || (p.date ? Date.parse(p.date) : 0) || 0; }
 
+  // Banderas de selecciones (nombre ES → emoji). Fallback ⚽.
+  var FLAGS = {
+    'Argentina': '🇦🇷', 'Brasil': '🇧🇷', 'Francia': '🇫🇷', 'España': '🇪🇸', 'Inglaterra': '🏴󠁧󠁢󠁥󠁮󠁧󠁿',
+    'Portugal': '🇵🇹', 'Alemania': '🇩🇪', 'Países Bajos': '🇳🇱', 'P. Bajos': '🇳🇱', 'Bélgica': '🇧🇪',
+    'Italia': '🇮🇹', 'Croacia': '🇭🇷', 'Uruguay': '🇺🇾', 'Colombia': '🇨🇴', 'México': '🇲🇽',
+    'Estados Unidos': '🇺🇸', 'EE.UU.': '🇺🇸', 'Marruecos': '🇲🇦', 'Japón': '🇯🇵', 'Corea del Sur': '🇰🇷',
+    'Senegal': '🇸🇳', 'Suiza': '🇨🇭', 'Dinamarca': '🇩🇰', 'Serbia': '🇷🇸', 'Polonia': '🇵🇱',
+    'Suecia': '🇸🇪', 'Noruega': '🇳🇴', 'Ecuador': '🇪🇨', 'Perú': '🇵🇪', 'Chile': '🇨🇱',
+    'Paraguay': '🇵🇾', 'Canadá': '🇨🇦', 'Australia': '🇦🇺', 'Ghana': '🇬🇭', 'Nigeria': '🇳🇬',
+    'Egipto': '🇪🇬', 'Irán': '🇮🇷', 'Arabia Saudita': '🇸🇦', 'Catar': '🇶🇦', 'Túnez': '🇹🇳',
+    'Argelia': '🇩🇿', 'Camerún': '🇨🇲', 'Costa de Marfil': '🇨🇮', 'RD Congo': '🇨🇩', 'Nueva Zelanda': '🇳🇿',
+    'N. Zelanda': '🇳🇿', 'Cabo Verde': '🇨🇻', 'Jordania': '🇯🇴', 'Escocia': '🏴󠁧󠁢󠁳󠁣󠁴󠁿'
+  };
+  function flag(name) { return FLAGS[(name || '').trim()] || '⚽'; }
+
   function compute(picks) {
     var now = Date.now(), DAY = 86400000;
     var resolved = picks.filter(function (p) { return p.result === 'win' || p.result === 'loss'; });
@@ -43,13 +58,22 @@
     });
     champ.sort(function (a, b) { return b.pct - a.pct; });
 
-    // Pick del día: próximo partido pendiente (favorito por probabilidad, sin cuota)
-    var upcoming = picks.filter(function (p) { return p.result === 'pending' && p._wcMatch && tsOf(p) >= now - DAY; })
-      .sort(function (a, b) { return tsOf(a) - tsOf(b); });
-    var d = upcoming[0] || null, daily = null;
-    if (d) {
-      var favHome = (d.probH || 0) >= (d.probA || 0);
-      daily = { home: d.home, away: d.away, fav: favHome ? d.home : d.away, favPct: Math.max(d.probH || 0, d.probA || 0), league: d.league };
+    // Pick del día: partido WC pendiente de MÁXIMA confianza (bvr), tiebreak kickoff próximo
+    var pend = picks.filter(function (p) { return p.result === 'pending' && p._wcMatch; });
+    if (!pend.length) pend = picks.filter(function (p) { return p.result === 'pending'; });
+    pend.sort(function (a, b) { return (b.bvr || 0) - (a.bvr || 0) || tsOf(a) - tsOf(b); });
+    var dp = pend[0] || null, daily = null;
+    if (dp) {
+      var favHome = (dp.probH || 0) >= (dp.probA || 0);
+      var favName = favHome ? dp.home : dp.away;
+      var favPct = Math.max(dp.probH || 0, dp.probA || 0);
+      var dt = new Date(tsOf(dp));
+      var dstr = isFinite(dt.getTime()) ? (dt.toLocaleDateString('es-AR', { day: '2-digit', month: 'short' }) + ' · ' + dt.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', hour12: false })) : '';
+      daily = {
+        home: dp.home, away: dp.away, rec: dp.rec || '', fav: favName, favPct: favPct, confPct: favPct,
+        dateStr: dstr, league: dp.league || '',
+        insight: 'Nuestra IA marca a ' + favName + ' como favorito en este partido (' + favPct + '% de probabilidad), ponderando forma reciente, nivel individual y contexto del cruce.'
+      };
     }
     return { champ: champ, acc30: acc30, accAll: accAll, daily: daily, totalPicks: picks.length };
   }
@@ -68,6 +92,17 @@
     }
     if (data.acc30 != null) setAll('[data-live="acc"]', function (el) { el.textContent = data.acc30 + '%'; });
     if (data.totalPicks) setAll('[data-live="total-picks"]', function (el) { el.textContent = data.totalPicks.toLocaleString('es-AR'); });
+    var dp = data.daily;
+    if (dp) {
+      setAll('[data-live="pick-home"]', function (el) { el.textContent = dp.home; });
+      setAll('[data-live="pick-away"]', function (el) { el.textContent = dp.away; });
+      setAll('[data-live="pick-home-flag"]', function (el) { el.textContent = flag(dp.home); });
+      setAll('[data-live="pick-away-flag"]', function (el) { el.textContent = flag(dp.away); });
+      setAll('[data-live="pick-rec"]', function (el) { el.textContent = dp.rec; });
+      setAll('[data-live="pick-conf"]', function (el) { el.textContent = '✓ ' + dp.confPct + '% de probabilidad IA'; });
+      setAll('[data-live="pick-info"]', function (el) { el.textContent = '📅 ' + dp.dateStr + ' · 🏟️ Mundial 2026'; });
+      setAll('[data-live="pick-insight"]', function (el) { el.innerHTML = '<strong>Análisis IA:</strong> ' + dp.insight; });
+    }
     try { window.dispatchEvent(new CustomEvent('accesoia:live', { detail: data })); } catch (e) {}
   }
 
