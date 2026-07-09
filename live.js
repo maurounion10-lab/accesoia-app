@@ -87,7 +87,24 @@
         };
       });
 
-    return { champ: champ, acc30: acc30, accAll: accAll, daily: daily, upcoming: upcoming, totalPicks: picks.length };
+    // Combinada del día: hasta 3 PARTIDOS reales pendientes (nunca futures de torneo
+    // tipo "X gana el Mundial" / "X es goleador" — eso no es una pata de combinada real).
+    // Si hay menos de 2 partidos abiertos, no se arma (nunca se inventan patas).
+    var isTournamentFuture = /gana el mundial|goleador|llega a (semifinales|cuartos|octavos|la final)/i;
+    var allPending = picks.filter(function (p) { return p.result === 'pending' && !isTournamentFuture.test(p.rec || ''); })
+      .sort(function (a, b) { return (b.bvr || 0) - (a.bvr || 0) || tsOf(a) - tsOf(b); });
+    var combo = null;
+    if (allPending.length >= 2) {
+      var legs = allPending.slice(0, 3).map(function (p) {
+        var o = num(p.odds || p._bestOdds || p._hO) || null;
+        return { home: p.home, away: p.away, rec: p.rec || '', odds: o, pct: impliedPct(o) };
+      });
+      var totalOdds = legs.reduce(function (acc, l) { return l.odds ? acc * l.odds : acc; }, 1);
+      var totalPct = legs.reduce(function (acc, l) { return l.pct != null ? acc * (l.pct / 100) : acc; }, 1);
+      combo = { legs: legs, totalOdds: totalOdds > 1 ? +totalOdds.toFixed(2) : null, totalPct: Math.round(totalPct * 100) };
+    }
+
+    return { champ: champ, acc30: acc30, accAll: accAll, daily: daily, upcoming: upcoming, combo: combo, totalPicks: picks.length };
   }
 
   function setAll(sel, fn) { var els = document.querySelectorAll(sel); for (var i = 0; i < els.length; i++) fn(els[i]); }
@@ -127,6 +144,25 @@
           (m.dateStr ? '<span class="sm-date">' + m.dateStr + '</span>' : '') + '</div>';
       }).join('');
       setAll('[data-live="stage-matches"]', function (el) { el.innerHTML = html; });
+    }
+    // Combinada del día
+    var comboEmpty = document.querySelector('[data-live="combo-empty"]');
+    var comboBody = document.querySelector('[data-live="combo-body"]');
+    if (data.combo && data.combo.legs.length >= 2) {
+      if (comboBody) comboBody.style.display = '';
+      if (comboEmpty) comboEmpty.style.display = 'none';
+      setAll('[data-live="combo-odds"]', function (el) { el.textContent = data.combo.totalOdds != null ? data.combo.totalOdds.toFixed(2) : '—'; });
+      setAll('[data-live="combo-conf"]', function (el) { el.textContent = data.combo.totalPct + '%'; });
+      var legsHtml = data.combo.legs.map(function (l, i) {
+        return '<div class="leg"><div class="leg-num">' + (i + 1) + '</div><div class="leg-body">' +
+          '<div class="leg-match">' + flag(l.home) + ' ' + l.home + ' vs ' + l.away + ' ' + flag(l.away) + '</div>' +
+          '<div class="leg-pick">' + l.rec + '</div></div>' +
+          '<div class="leg-odd">' + (l.odds ? l.odds.toFixed(2) : '—') + '</div></div>';
+      }).join('');
+      setAll('[data-live="combo-legs"]', function (el) { el.innerHTML = legsHtml; });
+    } else {
+      if (comboBody) comboBody.style.display = 'none';
+      if (comboEmpty) comboEmpty.style.display = '';
     }
     try { window.dispatchEvent(new CustomEvent('accesoia:live', { detail: data })); } catch (e) {}
   }
