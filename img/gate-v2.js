@@ -1,8 +1,8 @@
-/* Hard-gate Mundial 2026 - Gambeta v3 (scroll-cap + X libera)
- * - Aparece al 75% del scroll y DETIENE el scroll
- * - Cruz X visible para cerrar → libera el scroll para seguir leyendo
- * - 🆕 (10-jul-2026 v3) Al cerrar con X: hideGate + libera scroll cap + no reopen.
- *   El user puede llegar al final después de cerrar. No se reabre en 24h.
+/* Soft-gate value-first Mundial 2026 - Gambeta v4 (2026-07-10)
+ * - Aviso SUAVE una vez al 75% del scroll (o por click en contenido premium / CTAs manuales).
+ * - NO detiene el scroll (antes sí: mataba la confianza). Cruz X + backdrop + Escape para cerrar.
+ * - Cerrar = cerrar de verdad: no reabre. El dismiss persiste 24h (localStorage).
+ * - El valor gratis (favorita + predicción del día) queda visible; el mail desbloquea ranking completo + combinada.
  */
 (function(){
   'use strict';
@@ -160,30 +160,20 @@
 
   function closeGate(){
     hideGate();
-    // 🆕 (10-jul-2026 v3) X funcional: hide popup + LIBERAR scroll cap.
-    // El user puede continuar leyendo hasta el final. No reabre por 24h.
-    capActive = false;
+    // value-first (10-jul-2026): cerrar = cerrar de verdad. No traba el scroll ni reabre.
+    // El dismiss persiste 24h para no volver a molestar en la misma visita/día.
     _dismissedRecently = true;
     try { localStorage.setItem('gambeta_gate_dismissed_at_v3', String(Date.now())); } catch(e){}
     if (window.gtag) gtag('event','gate_close',{event_category:'mundial-gate', event_label: source});
   }
 
   function onScroll(){
-    // 🆕 (10-jul-2026 v3) Si dismissed, no hacer NADA (ni cap ni show).
-    if (_dismissedRecently) return;
-    // Si capActive = true (default), aplicar hard-gate: detener scroll al 75%.
-    if (!capActive) return;
-    var cap = getMaxScrollAllowed();
-    var currentY = window.scrollY;
-    if (currentY >= cap){
-      // Forzar scroll de vuelta al cap y mostrar popup si no está visible
-      if (currentY > cap + 5) {
-        window.scrollTo({top: cap, behavior: 'auto'});
-      }
-      if (!gateVisible){
-        showGate();
-        if (window.gtag) gtag('event','gate_show',{event_category:'mundial-gate', event_label: source});
-      }
+    // value-first: aviso SUAVE una vez al 75% del scroll. No detiene el scroll.
+    // Si ya lo cerró (persiste 24h) o ya está visible, no hace nada.
+    if (_dismissedRecently || gateVisible) return;
+    if (window.scrollY >= getMaxScrollAllowed()){
+      showGate();
+      if (window.gtag) gtag('event','gate_show',{event_category:'mundial-gate', event_label: source});
     }
   }
 
