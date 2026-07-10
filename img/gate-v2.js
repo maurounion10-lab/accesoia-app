@@ -1,11 +1,11 @@
-/* Soft-gate value-first Mundial 2026 - Gambeta v5 (2026-07-10)
- * Triggers (el que ocurra primero, UNA sola vez):
- *   - TIEMPO: 28s en página (clave: 99.9% del tráfico es mobile).
+/* Soft-gate captura Mundial 2026 - Gambeta v6 (2026-07-10)
+ * Triggers (el que ocurra primero):
+ *   - TIEMPO: 4s en página (clave: 99.9% del tráfico es mobile).
+ *   - SCROLL: al bajar 10% de la página.
  *   - EXIT-INTENT: el mouse sale por arriba (desktop).
- *   - SCROLL: al 75% (secundario; casi nadie llega, scroll medio 16%).
  *   - CLICK en contenido tapado/borroso o en CTAs "Quiero el acceso".
  * - NO detiene el scroll. Cruz X + backdrop + Escape para cerrar.
- * - Cerrar = cerrar de verdad: no reabre. El dismiss persiste 24h (localStorage).
+ * - Si lo cierra, VUELVE cuando se re-dispara (cooldown 12s para no machacar). No persiste entre visitas.
  * - El valor gratis (predicción del día) queda visible; el mail desbloquea la favorita + ranking + combinada.
  */
 (function(){
@@ -18,13 +18,10 @@
   var _alreadyUnlocked = false;
   try { _alreadyUnlocked = (localStorage.getItem('gambeta_lead_ok') === '1'); } catch(e){}
 
-  // 🆕 (10-jul-2026) Si el usuario dismisseó el gate hace <24h, respetarlo:
-  // NO abrirlo automáticamente por scroll. Los botones manuales siguen activos.
-  var _dismissedRecently = false;
-  try {
-    var dismissedAt = parseInt(localStorage.getItem('gambeta_gate_dismissed_at_v3') || '0', 10);
-    if (dismissedAt && (Date.now() - dismissedAt) < 24 * 3600 * 1000) _dismissedRecently = true;
-  } catch(e){}
+  // 🆕 (10-jul-2026) Captura agresiva: si lo cierra, VUELVE cuando se re-dispara.
+  // Solo un cooldown corto tras cerrar para no machacar (no persiste entre visitas).
+  var _lastClosedAt = 0;
+  var CLOSE_COOLDOWN_MS = 12000;
 
   if (_alreadyUnlocked) {
     // Usuario ya tiene acceso → los botones "Obtener Acceso IA" abren un
@@ -50,8 +47,7 @@
 
   var gateInjected = false;
   var gateVisible = false;
-  var capActive = true;
-  var THRESHOLD_PCT = 0.75;
+  var THRESHOLD_PCT = 0.10;   // aparece al bajar 10% de la página (antes 75%: casi nadie llegaba)
 
   var css = '\
 .gate-backdrop{position:fixed;inset:0;z-index:99998;background:rgba(8,8,14,0.92);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);display:none;align-items:center;justify-content:center;padding:20px;opacity:0;transition:opacity .35s ease}\
@@ -164,17 +160,16 @@
 
   function closeGate(){
     hideGate();
-    // value-first (10-jul-2026): cerrar = cerrar de verdad. No traba el scroll ni reabre.
-    // El dismiss persiste 24h para no volver a molestar en la misma visita/día.
-    _dismissedRecently = true;
-    try { localStorage.setItem('gambeta_gate_dismissed_at_v3', String(Date.now())); } catch(e){}
+    // Cerrar NO traba el scroll. Arranca un cooldown corto, pero el gate VUELVE si se re-dispara (captura).
+    _lastClosedAt = Date.now();
     if (window.gtag) gtag('event','gate_close',{event_category:'mundial-gate', event_label: source});
   }
 
-  // Muestra el gate UNA vez, respetando dismiss (24h) / unlock / visible. reason = para analytics.
+  // Muestra el gate respetando unlock / visible / cooldown. Si lo cerró, vuelve pasado el cooldown. reason = analytics.
   function softShow(reason){
-    if (_dismissedRecently || gateVisible) return;
+    if (gateVisible) return;
     try { if (localStorage.getItem('gambeta_lead_ok') === '1') return; } catch(_){}
+    if (Date.now() - _lastClosedAt < CLOSE_COOLDOWN_MS) return;   // recién cerrado: esperar el cooldown
     showGate();
     if (window.gtag) gtag('event','gate_show',{event_category:'mundial-gate', event_label: source + '|' + reason});
   }
@@ -240,9 +235,9 @@
     window.addEventListener('scroll', onScrollThrottled, { passive: true });
     onScroll();
 
-    // 🆕 (10-jul-2026) Triggers value-first para captar al 94% que rebota antes del 75% de scroll:
-    // 1) TIEMPO en página: a los 28s (el tráfico es 99.9% mobile, donde el exit-intent por mouse no existe).
-    setTimeout(function(){ softShow('timer_28s'); }, 28000);
+    // 🆕 (10-jul-2026) Triggers de captura agresiva (el que ocurra primero; vuelve si se re-dispara tras cerrar):
+    // 1) TIEMPO en página: a los 4s (el tráfico es 99.9% mobile, donde el exit-intent por mouse no existe).
+    setTimeout(function(){ softShow('timer_4s'); }, 4000);
     // 2) EXIT-INTENT desktop: el mouse sale por arriba (va a cerrar la pestaña / barra de direcciones).
     document.addEventListener('mouseout', function(e){
       if (e.clientY <= 0 && !e.relatedTarget && !e.toElement) softShow('exit_intent');
