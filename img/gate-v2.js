@@ -1,8 +1,8 @@
-/* Hard-gate Mundial 2026 - Gambeta v2
- * - Aparece al 75% del scroll (no por delay)
- * - Cruz X visible para cerrar
- * - Si cierra, scroll queda capped al 75% (no puede llegar al final sin email)
- * - Si scrollea mas alla, re-abre el modal
+/* Soft-gate value-first Mundial 2026 - Gambeta v3 (2026-07-10)
+ * - Aviso suave UNA vez al 75% del scroll (o por click en contenido premium / CTAs).
+ * - Cruz X visible + click en backdrop + Escape para cerrar.
+ * - Cerrar = cerrar de verdad: NO traba el scroll ni re-abre el modal (antes sí; mataba la confianza).
+ * - El valor gratis (predicción del día) queda visible; el mail desbloquea el ranking completo + combinada.
  */
 (function(){
   'use strict';
@@ -38,7 +38,7 @@
 
   var gateInjected = false;
   var gateVisible = false;
-  var capActive = false;
+  var dismissed = false;   // value-first: si el usuario cierra el gate, NO se vuelve a abrir por scroll ni se traba la página.
   var THRESHOLD_PCT = 0.75;
 
   var css = '\
@@ -62,7 +62,8 @@
 .gate-btn:hover{transform:translateY(-1px)}\
 .gate-btn:disabled{opacity:.6;cursor:wait}\
 .gate-features{display:flex;flex-wrap:wrap;gap:8px;margin:18px 0 22px}\
-.gate-features span{font:600 11px/1 "Poppins",system-ui,sans-serif;color:rgba(255,255,255,.55);background:rgba(255,255,255,.04);padding:6px 12px;border-radius:100px;border:1px solid rgba(255,255,255,.08)}\
+.gate-features span{font:600 12px/1.3 "Poppins",system-ui,sans-serif;color:rgba(255,255,255,.82);background:rgba(255,255,255,.05);padding:8px 13px;border-radius:100px;border:1px solid rgba(255,255,255,.10);display:inline-flex;align-items:center}\
+.gate-proof{font:700 12px/1.4 "Poppins",system-ui,sans-serif;color:#7fe0a0;background:rgba(52,224,127,.08);border:1px solid rgba(52,224,127,.22);border-radius:10px;padding:9px 12px;text-align:center;margin-bottom:14px}\
 .gate-error{background:rgba(200,16,46,.15);border:1px solid rgba(200,16,46,.4);color:#ff8a99;padding:12px 14px;border-radius:10px;font:600 13px/1.4 "Poppins",system-ui,sans-serif;margin-top:10px;display:none}\
 .gate-error.show{display:block}\
 .gate-fineprint{font:500 11px/1.4 "Poppins",system-ui,sans-serif;color:rgba(255,255,255,.4);text-align:center;margin-top:14px}\
@@ -93,20 +94,21 @@
       <div class="gate-card">\
         <button type="button" class="gate-close" id="gate-close" aria-label="Cerrar">×</button>\
         <div class="gate-content">\
-          <span class="gate-badge">⚡ ACCESO GRATIS · 2 IAS</span>\
-          <h2 class="gate-title">DESBLOQUEÁ <span class="g">2 IAs GRATIS</span> DEL MUNDIAL</h2>\
-          <p class="gate-desc">Dejá tu mail y desbloqueá <strong>2 herramientas IA distintas</strong>: predicciones partido a partido + combinadas premium. 100% gratis.</p>\
+          <span class="gate-badge">⚡ GRATIS · SIN SPAM · SIN TARJETA</span>\
+          <h2 class="gate-title">DESBLOQUEÁ EL <span class="g">RANKING COMPLETO</span> DEL MUNDIAL</h2>\
+          <p class="gate-desc">Dejanos tu mail y te llega, gratis:</p>\
           <div class="gate-features">\
-            <span>🏆 IA #1: Predicciones</span>\
-            <span>💰 IA #2: Combinadas</span>\
-            <span>⚡ Sin spam</span>\
+            <span>🏆 Ranking completo de las 8 candidatas</span>\
+            <span>💰 La combinada del día</span>\
+            <span>📲 El pick de mañana por Telegram</span>\
           </div>\
+          <div class="gate-proof">✓ 15.000 en el canal de Telegram · ✓ 77% de acierto verificado (últimos 30 días)</div>\
           <form class="gate-form" id="gate-form" novalidate>\
             <input type="email" class="gate-input" id="gate-email" placeholder="tu@email.com" autocomplete="email" required>\
-            <button type="submit" class="gate-btn" id="gate-btn">DESBLOQUEAR LAS 2 IAs →</button>\
+            <button type="submit" class="gate-btn" id="gate-btn">QUIERO EL ACCESO GRATIS →</button>\
             <div class="gate-error" id="gate-error"></div>\
           </form>\
-          <p class="gate-fineprint">Sin spam. Podés darte de baja cuando quieras.</p>\
+          <p class="gate-fineprint">Sin spam. Te podés dar de baja cuando quieras.</p>\
         </div>\
       </div>\
     ';
@@ -150,26 +152,16 @@
 
   function closeGate(){
     hideGate();
-    capActive = true;
-    var cap = getMaxScrollAllowed();
-    if (window.scrollY > cap) {
-      window.scrollTo({ top: cap, behavior: 'smooth' });
-    }
+    dismissed = true;   // cerrar = cerrar de verdad. Sin trabar el scroll, sin re-abrir.
     if (window.gtag) gtag('event','gate_close',{event_category:'mundial-gate', event_label: source});
   }
 
   function onScroll(){
-    var cap = getMaxScrollAllowed();
-    var currentY = window.scrollY;
-    if (!gateVisible && !capActive && currentY >= cap){
+    // Aviso suave UNA sola vez al 75% del scroll. Si ya lo cerró, no molesta más.
+    if (gateVisible || dismissed) return;
+    if (window.scrollY >= getMaxScrollAllowed()){
       showGate();
       if (window.gtag) gtag('event','gate_show',{event_category:'mundial-gate', event_label: source});
-      return;
-    }
-    if (!gateVisible && capActive && currentY > cap){
-      showGate();
-      window.scrollTo({ top: cap, behavior: 'auto' });
-      if (window.gtag) gtag('event','gate_reopen',{event_category:'mundial-gate', event_label: source});
     }
   }
 
@@ -213,14 +205,14 @@
         err.textContent = (data && data.error) ? 'Error: ' + data.error : 'No pudimos suscribirte. Probá de nuevo.';
         err.classList.add('show');
         btn.disabled = false;
-        btn.textContent = 'DESBLOQUEAR LAS 2 IAs →';
+        btn.textContent = 'QUIERO EL ACCESO GRATIS →';
       }
     } catch (ex) {
       var detail = ex && (ex.name + ': ' + ex.message) || 'unknown';
       err.textContent = 'Error temporal (' + detail + '). Probá de nuevo en unos segundos, o usá Telegram mientras tanto.';
       err.classList.add('show');
       btn.disabled = false;
-      btn.textContent = 'DESBLOQUEAR LAS 2 IAs →';
+      btn.textContent = 'QUIERO EL ACCESO GRATIS →';
       if (window.gtag) gtag('event','gate_fetch_error',{event_category:'mundial-gate', event_label: detail.slice(0,80)});
     }
   }

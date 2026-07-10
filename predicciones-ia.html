@@ -580,13 +580,13 @@ footer.site-foot a { color: var(--gold); margin: 0 10px; text-decoration: none; 
 </nav>
 
 <header class="hero">
-  <img class="hero-img" src="/img/yamal.jpg" style="filter: blur(14px) saturate(1.4) brightness(0.7); transform: scale(1.08)" data-spoiler="hero" alt="">
+  <img class="hero-img" src="/img/yamal.jpg" style="filter: saturate(1.25) brightness(0.68); transform: scale(1.05)" alt="">
   <div class="hero-overlay"></div>
   <div class="hero-content">
     <span class="hero-eyebrow">Predicciones IA · Mundial 2026</span>
     <h1>¿Quién <span class="accent">gana</span> el Mundial 2026?</h1>
-    <div class="mega-num"><span data-live-real="fav" data-real="18.2%" style="filter:blur(10px);user-select:none">??.?%</span><small style="font-size:1.5rem;color:var(--text-mute);font-weight:600;display:block;margin-top:8px;letter-spacing:0">de probabilidad, según nuestra IA propia</small></div>
-    <p class="mega-sub">Nuestra IA propia analizó las <strong>48 selecciones</strong> y ya tiene su favorita. Dejá tu mail y desbloqueá el <strong>ranking completo</strong> — gratis, en 10 segundos.</p>
+    <div class="mega-num"><span data-live="fav-team">España</span> <span data-live="fav-pct" style="color:#f5cd47">18%</span><small style="font-size:1.4rem;color:var(--text-mute);font-weight:600;display:block;margin-top:8px;letter-spacing:0">de probabilidad al título, según nuestra IA propia</small></div>
+    <p class="mega-sub">Analizamos las <strong>48 selecciones</strong> — esta es la favorita, gratis. Dejá tu mail y desbloqueá el <strong>ranking completo de las 8</strong> + la <strong>combinada del día</strong> + el <strong>pick de mañana</strong>.</p>
     <div class="lead-hero-cta">
       <button type="button" class="lead-form-cta" onclick="if(window.gambetaOpenGate)window.gambetaOpenGate();window.gtag&&gtag('event','inline_cta_open_gate',{location:'hero'})">Desbloquear el ranking IA →</button>
       <a href="https://t.me/GrupoLatam" target="_blank" rel="noopener" class="lead-btn-tg" onclick="window.gtag&&gtag('event','telegram_click',{location:'hero'})">
@@ -1109,15 +1109,15 @@ footer.site-foot a { color: var(--gold); margin: 0 10px; text-decoration: none; 
   <p style="opacity:0.55;font-size:0.76rem;margin-top:16px">© 2026 Acceso IA · Modelo IA propio · Contenido editorial</p>
 </footer>
 <div class="sticky-cta-bar" id="stickyBar">
-  <div class="sticky-txt">⚡ Obtené acceso GRATIS a 2 IAs del Mundial<small>Predicciones + combinadas premium</small></div>
-  <button type="button" class="sticky-btn" onclick="if(window.gambetaOpenGate)window.gambetaOpenGate();else location.reload();window.gtag&&gtag('event','sticky_open_gate',{location:'sticky'})">Obtener Acceso IA →</button>
+  <div class="sticky-txt">⚡ El ranking completo de las 8 + la combinada del día<small>Gratis, a tu mail · sin spam</small></div>
+  <button type="button" class="sticky-btn" onclick="if(window.gambetaOpenGate)window.gambetaOpenGate();else location.reload();window.gtag&&gtag('event','sticky_open_gate',{location:'sticky'})">Quiero el acceso →</button>
   <button class="sticky-close" onclick="document.getElementById('stickyBar').style.display='none';try{localStorage.setItem('stickyClosed','1')}catch(e){}">×</button>
 </div>
 <script>try{if(localStorage.getItem('stickyClosed')==='1'){var s=document.getElementById('stickyBar');if(s)s.style.display='none'}}catch(e){}</script>
 
 
 
-<script src="/img/gate-v2.js?v=1782300374" defer></script>
+<script src="/img/gate-v2.js?v=1783620100" defer></script>
 <script src="/live.js?v=2" defer></script>
 </body>
 </html>
