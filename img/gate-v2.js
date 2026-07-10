@@ -1,10 +1,8 @@
-/* Soft-gate Mundial 2026 - Gambeta v2 (jugando limpio)
- * - Aparece al 75% del scroll (no por delay)
- * - Cruz X visible para cerrar
- * - 🆕 (10-jul-2026) Si el usuario cierra el gate: RESPETAR su decisión.
- *   No más scroll-cap forzado, no más reopen automático. Se recuerda en
- *   localStorage por 24h y no vuelve a molestar. Los botones "Obtener
- *   Acceso IA" siguen funcionando manual si el user cambia de opinión.
+/* Hard-gate Mundial 2026 - Gambeta v3 (scroll-cap + X libera)
+ * - Aparece al 75% del scroll y DETIENE el scroll
+ * - Cruz X visible para cerrar → libera el scroll para seguir leyendo
+ * - 🆕 (10-jul-2026 v3) Al cerrar con X: hideGate + libera scroll cap + no reopen.
+ *   El user puede llegar al final después de cerrar. No se reabre en 24h.
  */
 (function(){
   'use strict';
@@ -20,7 +18,7 @@
   // NO abrirlo automáticamente por scroll. Los botones manuales siguen activos.
   var _dismissedRecently = false;
   try {
-    var dismissedAt = parseInt(localStorage.getItem('gambeta_gate_dismissed_at') || '0', 10);
+    var dismissedAt = parseInt(localStorage.getItem('gambeta_gate_dismissed_at_v3') || '0', 10);
     if (dismissedAt && (Date.now() - dismissedAt) < 24 * 3600 * 1000) _dismissedRecently = true;
   } catch(e){}
 
@@ -48,7 +46,7 @@
 
   var gateInjected = false;
   var gateVisible = false;
-  var capActive = false;
+  var capActive = true;
   var THRESHOLD_PCT = 0.75;
 
   var css = '\
@@ -160,23 +158,30 @@
 
   function closeGate(){
     hideGate();
-    // 🆕 (10-jul-2026) Jugar limpio: NO forzar scroll para arriba y NO reabrir.
-    // Marcamos "dismissed" para no molestar por 24h en esta sesión.
-    capActive = true;
+    // 🆕 (10-jul-2026 v3) X funcional: hide popup + LIBERAR scroll cap.
+    // El user puede continuar leyendo hasta el final. No reabre por 24h.
+    capActive = false;
     _dismissedRecently = true;
-    try { localStorage.setItem('gambeta_gate_dismissed_at', String(Date.now())); } catch(e){}
+    try { localStorage.setItem('gambeta_gate_dismissed_at_v3', String(Date.now())); } catch(e){}
     if (window.gtag) gtag('event','gate_close',{event_category:'mundial-gate', event_label: source});
   }
 
   function onScroll(){
-    // 🆕 (10-jul-2026) Si el user ya dismisseó (esta sesión o <24h atrás),
-    // no volver a mostrar el gate por scroll. Los botones manuales siguen ok.
-    if (capActive || _dismissedRecently) return;
+    // 🆕 (10-jul-2026 v3) Si dismissed, no hacer NADA (ni cap ni show).
+    if (_dismissedRecently) return;
+    // Si capActive = true (default), aplicar hard-gate: detener scroll al 75%.
+    if (!capActive) return;
     var cap = getMaxScrollAllowed();
     var currentY = window.scrollY;
-    if (!gateVisible && currentY >= cap){
-      showGate();
-      if (window.gtag) gtag('event','gate_show',{event_category:'mundial-gate', event_label: source});
+    if (currentY >= cap){
+      // Forzar scroll de vuelta al cap y mostrar popup si no está visible
+      if (currentY > cap + 5) {
+        window.scrollTo({top: cap, behavior: 'auto'});
+      }
+      if (!gateVisible){
+        showGate();
+        if (window.gtag) gtag('event','gate_show',{event_category:'mundial-gate', event_label: source});
+      }
     }
   }
 
