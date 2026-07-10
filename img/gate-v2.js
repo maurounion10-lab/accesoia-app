@@ -1,8 +1,12 @@
-/* Soft-gate value-first Mundial 2026 - Gambeta v4 (2026-07-10)
- * - Aviso SUAVE una vez al 75% del scroll (o por click en contenido premium / CTAs manuales).
- * - NO detiene el scroll (antes sí: mataba la confianza). Cruz X + backdrop + Escape para cerrar.
+/* Soft-gate value-first Mundial 2026 - Gambeta v5 (2026-07-10)
+ * Triggers (el que ocurra primero, UNA sola vez):
+ *   - TIEMPO: 28s en página (clave: 99.9% del tráfico es mobile).
+ *   - EXIT-INTENT: el mouse sale por arriba (desktop).
+ *   - SCROLL: al 75% (secundario; casi nadie llega, scroll medio 16%).
+ *   - CLICK en contenido tapado/borroso o en CTAs "Quiero el acceso".
+ * - NO detiene el scroll. Cruz X + backdrop + Escape para cerrar.
  * - Cerrar = cerrar de verdad: no reabre. El dismiss persiste 24h (localStorage).
- * - El valor gratis (favorita + predicción del día) queda visible; el mail desbloquea ranking completo + combinada.
+ * - El valor gratis (predicción del día) queda visible; el mail desbloquea la favorita + ranking + combinada.
  */
 (function(){
   'use strict';
@@ -167,14 +171,17 @@
     if (window.gtag) gtag('event','gate_close',{event_category:'mundial-gate', event_label: source});
   }
 
-  function onScroll(){
-    // value-first: aviso SUAVE una vez al 75% del scroll. No detiene el scroll.
-    // Si ya lo cerró (persiste 24h) o ya está visible, no hace nada.
+  // Muestra el gate UNA vez, respetando dismiss (24h) / unlock / visible. reason = para analytics.
+  function softShow(reason){
     if (_dismissedRecently || gateVisible) return;
-    if (window.scrollY >= getMaxScrollAllowed()){
-      showGate();
-      if (window.gtag) gtag('event','gate_show',{event_category:'mundial-gate', event_label: source});
-    }
+    try { if (localStorage.getItem('gambeta_lead_ok') === '1') return; } catch(_){}
+    showGate();
+    if (window.gtag) gtag('event','gate_show',{event_category:'mundial-gate', event_label: source + '|' + reason});
+  }
+
+  function onScroll(){
+    // Trigger por scroll (secundario): al 75%. NO detiene el scroll.
+    if (window.scrollY >= getMaxScrollAllowed()) softShow('scroll');
   }
 
   var scrollPending = false;
@@ -232,6 +239,14 @@
   function init(){
     window.addEventListener('scroll', onScrollThrottled, { passive: true });
     onScroll();
+
+    // 🆕 (10-jul-2026) Triggers value-first para captar al 94% que rebota antes del 75% de scroll:
+    // 1) TIEMPO en página: a los 28s (el tráfico es 99.9% mobile, donde el exit-intent por mouse no existe).
+    setTimeout(function(){ softShow('timer_28s'); }, 28000);
+    // 2) EXIT-INTENT desktop: el mouse sale por arriba (va a cerrar la pestaña / barra de direcciones).
+    document.addEventListener('mouseout', function(e){
+      if (e.clientY <= 0 && !e.relatedTarget && !e.toElement) softShow('exit_intent');
+    });
 
     // === Inyectar CSS premium para blurs ===
     var style = document.createElement('style');
