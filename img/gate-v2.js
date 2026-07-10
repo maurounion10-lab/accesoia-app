@@ -248,11 +248,11 @@
       '.has-blur-content:hover{transform:translateY(-2px)}',
       '.has-blur-content::after{content:"";position:absolute;inset:0;background:radial-gradient(circle at center,rgba(212,175,55,.12) 0%,rgba(0,0,0,0) 60%);pointer-events:none;z-index:2;border-radius:inherit;opacity:0;transition:opacity .25s ease}',
       '.has-blur-content:hover::after{opacity:1}',
-      '.unlock-cta{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:5;background:linear-gradient(135deg,#f5cd47 0%,#d4af37 100%);color:#0a0a0f;padding:10px 16px;border-radius:999px;font-size:.78rem;font-weight:900;letter-spacing:.5px;text-transform:uppercase;box-shadow:0 8px 24px rgba(212,175,55,.4),0 2px 6px rgba(0,0,0,.4);display:inline-flex;align-items:center;gap:6px;opacity:.92;transition:all .25s ease;pointer-events:none;white-space:nowrap}',
+      '.unlock-cta{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:5;background:linear-gradient(135deg,#f5cd47 0%,#d4af37 100%);color:#0a0a0f;padding:9px 15px;border-radius:999px;font-size:.75rem;font-weight:900;letter-spacing:.5px;text-transform:uppercase;box-shadow:0 8px 24px rgba(212,175,55,.4),0 2px 6px rgba(0,0,0,.4);display:inline-flex;align-items:center;gap:6px;opacity:.92;transition:all .25s ease;pointer-events:none;white-space:nowrap;max-width:calc(100% - 20px)}',
       '.unlock-cta::before{content:"🔒";font-size:.85rem}',
       '.has-blur-content:hover .unlock-cta{opacity:1;transform:translate(-50%,-50%) scale(1.06);box-shadow:0 12px 32px rgba(212,175,55,.55),0 2px 6px rgba(0,0,0,.5)}',
       '.unlock-mini{display:inline-flex;align-items:center;gap:4px;background:rgba(212,175,55,.18);border:1px solid rgba(212,175,55,.45);color:#f5cd47;padding:1px 8px;border-radius:999px;font-size:.7rem;font-weight:800;margin-left:4px;vertical-align:middle;cursor:pointer;transition:all .2s}',
-      '.unlock-mini:hover{background:rgba(212,175,55,.32)}',
+      '.unlock-mini:hover{background:rgba(212,175,55,.32)}', '@media (max-width:480px){.unlock-cta{font-size:.68rem;padding:7px 12px;letter-spacing:.3px}}',
       'body.unlocked [style*="blur("],body.unlocked [data-spoiler]{filter:none!important;transform:none!important;user-select:auto!important}',
       'body.unlocked .has-blur-content::after,body.unlocked .unlock-cta,body.unlocked .unlock-mini{display:none!important}',
       'body.unlocked img[data-spoiler],body.unlocked div[data-spoiler]{filter:none!important}'
@@ -293,7 +293,7 @@
     // === Marcar cards que contienen blureados ===
     function markBlurCards(){
       var candidates = document.querySelectorAll(
-        '.premio-card, .team-card, .bar-row, .match-card, .stat-card, .hero-img-wrap, .group-card, .candidata-card'
+        '.premio-card, .team-card, .match-card, .stat-card, .hero-img-wrap, .group-card, .candidata-card, .sel-card'
       );
       candidates.forEach(function(card){
         var hasBlur = card.querySelector('[data-spoiler], [style*="blur("]');
@@ -317,10 +317,12 @@
         while (p && hops < 3){
           if (p.classList.contains('has-blur-content')) return;
           var tag = (p.tagName||'').toLowerCase();
-          // Si es un container claro y NO es la card principal del flujo
-          if (tag === 'div' && p.offsetWidth > 80 && p.offsetHeight > 40 && !p.querySelector('.unlock-cta')){
-            // Verificar que sea un contenedor cohesivo (no body)
-            if (p !== document.body && p.tagName !== 'SECTION' && p.tagName !== 'MAIN'){
+          // Si es un container GRANDE y NO es una barrita delgada / elemento pequeño
+          var pClasses = (p.className || '') + '';
+          var isSmallEl = /\b(bar-row|bar-wrap|bar-fill|big-pct|team-name|premio-name|premio-team|premio-pct|pct-lbl|one-liner|match-name|match-flag|flag|flag-wrap|bar-val|rank-tag|match-teams|vs|match-team|hero-eyebrow|kicker|inline-cta-btns|inline-cta-txt)\b/.test(pClasses);
+          if (tag === 'div' && p.offsetWidth > 220 && p.offsetHeight > 160 && !p.querySelector('.unlock-cta') && !isSmallEl){
+            // Verificar que sea un contenedor cohesivo (no body/section/main)
+            if (p !== document.body && p.tagName !== 'SECTION' && p.tagName !== 'MAIN' && p.tagName !== 'HEADER' && p.tagName !== 'FOOTER'){
               p.classList.add('has-blur-content');
               var cta = document.createElement('div');
               cta.className = 'unlock-cta';
