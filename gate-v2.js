@@ -1,8 +1,10 @@
-/* Hard-gate Mundial 2026 - Gambeta v3 (scroll-cap + X libera)
- * - Aparece al 75% del scroll y DETIENE el scroll
- * - Cruz X visible para cerrar → libera el scroll para seguir leyendo
- * - 🆕 (10-jul-2026 v3) Al cerrar con X: hideGate + libera scroll cap + no reopen.
- *   El user puede llegar al final después de cerrar. No se reabre en 24h.
+/* Soft-gate Mundial 2026 - Gambeta v2 (jugando limpio)
+ * - Aparece al 75% del scroll (no por delay)
+ * - Cruz X visible para cerrar
+ * - 🆕 (10-jul-2026) Si el usuario cierra el gate: RESPETAR su decisión.
+ *   No más scroll-cap forzado, no más reopen automático. Se recuerda en
+ *   localStorage por 24h y no vuelve a molestar. Los botones "Obtener
+ *   Acceso IA" siguen funcionando manual si el user cambia de opinión.
  */
 (function(){
   'use strict';
@@ -18,7 +20,7 @@
   // NO abrirlo automáticamente por scroll. Los botones manuales siguen activos.
   var _dismissedRecently = false;
   try {
-    var dismissedAt = parseInt(localStorage.getItem('gambeta_gate_dismissed_at_v3') || '0', 10);
+    var dismissedAt = parseInt(localStorage.getItem('gambeta_gate_dismissed_at') || '0', 10);
     if (dismissedAt && (Date.now() - dismissedAt) < 24 * 3600 * 1000) _dismissedRecently = true;
   } catch(e){}
 
@@ -46,7 +48,7 @@
 
   var gateInjected = false;
   var gateVisible = false;
-  var capActive = true;
+  var capActive = false;
   var THRESHOLD_PCT = 0.75;
 
   var css = '\
@@ -70,8 +72,7 @@
 .gate-btn:hover{transform:translateY(-1px)}\
 .gate-btn:disabled{opacity:.6;cursor:wait}\
 .gate-features{display:flex;flex-wrap:wrap;gap:8px;margin:18px 0 22px}\
-.gate-features span{font:600 12px/1.3 "Poppins",system-ui,sans-serif;color:rgba(255,255,255,.82);background:rgba(255,255,255,.05);padding:8px 13px;border-radius:100px;border:1px solid rgba(255,255,255,.10);display:inline-flex;align-items:center}\
-.gate-proof{font:700 12px/1.4 "Poppins",system-ui,sans-serif;color:#7fe0a0;background:rgba(52,224,127,.08);border:1px solid rgba(52,224,127,.22);border-radius:10px;padding:9px 12px;text-align:center;margin-bottom:14px}\
+.gate-features span{font:600 11px/1 "Poppins",system-ui,sans-serif;color:rgba(255,255,255,.55);background:rgba(255,255,255,.04);padding:6px 12px;border-radius:100px;border:1px solid rgba(255,255,255,.08)}\
 .gate-error{background:rgba(200,16,46,.15);border:1px solid rgba(200,16,46,.4);color:#ff8a99;padding:12px 14px;border-radius:10px;font:600 13px/1.4 "Poppins",system-ui,sans-serif;margin-top:10px;display:none}\
 .gate-error.show{display:block}\
 .gate-fineprint{font:500 11px/1.4 "Poppins",system-ui,sans-serif;color:rgba(255,255,255,.4);text-align:center;margin-top:14px}\
@@ -102,21 +103,20 @@
       <div class="gate-card">\
         <button type="button" class="gate-close" id="gate-close" aria-label="Cerrar">×</button>\
         <div class="gate-content">\
-          <span class="gate-badge">⚡ GRATIS · SIN SPAM · SIN TARJETA</span>\
-          <h2 class="gate-title">DESBLOQUEÁ EL <span class="g">RANKING COMPLETO</span> DEL MUNDIAL</h2>\
-          <p class="gate-desc">Dejanos tu mail y te llega, gratis:</p>\
+          <span class="gate-badge">⚡ ACCESO GRATIS · 2 IAS</span>\
+          <h2 class="gate-title">DESBLOQUEÁ <span class="g">2 IAs GRATIS</span> DEL MUNDIAL</h2>\
+          <p class="gate-desc">Dejá tu mail y desbloqueá <strong>2 herramientas IA distintas</strong>: predicciones partido a partido + combinadas premium. 100% gratis.</p>\
           <div class="gate-features">\
-            <span>🏆 Ranking completo de las 8 candidatas</span>\
-            <span>💰 La combinada del día</span>\
-            <span>📲 El pick de mañana por Telegram</span>\
+            <span>🏆 IA #1: Predicciones</span>\
+            <span>💰 IA #2: Combinadas</span>\
+            <span>⚡ Sin spam</span>\
           </div>\
-          <div class="gate-proof">✓ 15.000 en el canal de Telegram · ✓ 77% de acierto verificado (últimos 30 días)</div>\
           <form class="gate-form" id="gate-form" novalidate>\
             <input type="email" class="gate-input" id="gate-email" placeholder="tu@email.com" autocomplete="email" required>\
-            <button type="submit" class="gate-btn" id="gate-btn">QUIERO EL ACCESO GRATIS →</button>\
+            <button type="submit" class="gate-btn" id="gate-btn">DESBLOQUEAR LAS 2 IAs →</button>\
             <div class="gate-error" id="gate-error"></div>\
           </form>\
-          <p class="gate-fineprint">Sin spam. Te podés dar de baja cuando quieras.</p>\
+          <p class="gate-fineprint">Sin spam. Podés darte de baja cuando quieras.</p>\
         </div>\
       </div>\
     ';
@@ -160,30 +160,23 @@
 
   function closeGate(){
     hideGate();
-    // 🆕 (10-jul-2026 v3) X funcional: hide popup + LIBERAR scroll cap.
-    // El user puede continuar leyendo hasta el final. No reabre por 24h.
-    capActive = false;
+    // 🆕 (10-jul-2026) Jugar limpio: NO forzar scroll para arriba y NO reabrir.
+    // Marcamos "dismissed" para no molestar por 24h en esta sesión.
+    capActive = true;
     _dismissedRecently = true;
-    try { localStorage.setItem('gambeta_gate_dismissed_at_v3', String(Date.now())); } catch(e){}
+    try { localStorage.setItem('gambeta_gate_dismissed_at', String(Date.now())); } catch(e){}
     if (window.gtag) gtag('event','gate_close',{event_category:'mundial-gate', event_label: source});
   }
 
   function onScroll(){
-    // 🆕 (10-jul-2026 v3) Si dismissed, no hacer NADA (ni cap ni show).
-    if (_dismissedRecently) return;
-    // Si capActive = true (default), aplicar hard-gate: detener scroll al 75%.
-    if (!capActive) return;
+    // 🆕 (10-jul-2026) Si el user ya dismisseó (esta sesión o <24h atrás),
+    // no volver a mostrar el gate por scroll. Los botones manuales siguen ok.
+    if (capActive || _dismissedRecently) return;
     var cap = getMaxScrollAllowed();
     var currentY = window.scrollY;
-    if (currentY >= cap){
-      // Forzar scroll de vuelta al cap y mostrar popup si no está visible
-      if (currentY > cap + 5) {
-        window.scrollTo({top: cap, behavior: 'auto'});
-      }
-      if (!gateVisible){
-        showGate();
-        if (window.gtag) gtag('event','gate_show',{event_category:'mundial-gate', event_label: source});
-      }
+    if (!gateVisible && currentY >= cap){
+      showGate();
+      if (window.gtag) gtag('event','gate_show',{event_category:'mundial-gate', event_label: source});
     }
   }
 
@@ -227,14 +220,14 @@
         err.textContent = (data && data.error) ? 'Error: ' + data.error : 'No pudimos suscribirte. Probá de nuevo.';
         err.classList.add('show');
         btn.disabled = false;
-        btn.textContent = 'QUIERO EL ACCESO GRATIS →';
+        btn.textContent = 'DESBLOQUEAR LAS 2 IAs →';
       }
     } catch (ex) {
       var detail = ex && (ex.name + ': ' + ex.message) || 'unknown';
       err.textContent = 'Error temporal (' + detail + '). Probá de nuevo en unos segundos, o usá Telegram mientras tanto.';
       err.classList.add('show');
       btn.disabled = false;
-      btn.textContent = 'QUIERO EL ACCESO GRATIS →';
+      btn.textContent = 'DESBLOQUEAR LAS 2 IAs →';
       if (window.gtag) gtag('event','gate_fetch_error',{event_category:'mundial-gate', event_label: detail.slice(0,80)});
     }
   }
@@ -250,11 +243,11 @@
       '.has-blur-content:hover{transform:translateY(-2px)}',
       '.has-blur-content::after{content:"";position:absolute;inset:0;background:radial-gradient(circle at center,rgba(212,175,55,.12) 0%,rgba(0,0,0,0) 60%);pointer-events:none;z-index:2;border-radius:inherit;opacity:0;transition:opacity .25s ease}',
       '.has-blur-content:hover::after{opacity:1}',
-      '.unlock-cta{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:5;background:linear-gradient(135deg,#f5cd47 0%,#d4af37 100%);color:#0a0a0f;padding:9px 15px;border-radius:999px;font-size:.75rem;font-weight:900;letter-spacing:.5px;text-transform:uppercase;box-shadow:0 8px 24px rgba(212,175,55,.4),0 2px 6px rgba(0,0,0,.4);display:inline-flex;align-items:center;gap:6px;opacity:.92;transition:all .25s ease;pointer-events:none;white-space:nowrap;max-width:calc(100% - 20px)}',
+      '.unlock-cta{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:5;background:linear-gradient(135deg,#f5cd47 0%,#d4af37 100%);color:#0a0a0f;padding:10px 16px;border-radius:999px;font-size:.78rem;font-weight:900;letter-spacing:.5px;text-transform:uppercase;box-shadow:0 8px 24px rgba(212,175,55,.4),0 2px 6px rgba(0,0,0,.4);display:inline-flex;align-items:center;gap:6px;opacity:.92;transition:all .25s ease;pointer-events:none;white-space:nowrap}',
       '.unlock-cta::before{content:"🔒";font-size:.85rem}',
       '.has-blur-content:hover .unlock-cta{opacity:1;transform:translate(-50%,-50%) scale(1.06);box-shadow:0 12px 32px rgba(212,175,55,.55),0 2px 6px rgba(0,0,0,.5)}',
       '.unlock-mini{display:inline-flex;align-items:center;gap:4px;background:rgba(212,175,55,.18);border:1px solid rgba(212,175,55,.45);color:#f5cd47;padding:1px 8px;border-radius:999px;font-size:.7rem;font-weight:800;margin-left:4px;vertical-align:middle;cursor:pointer;transition:all .2s}',
-      '.unlock-mini:hover{background:rgba(212,175,55,.32)}', '@media (max-width:480px){.unlock-cta{font-size:.68rem;padding:7px 12px;letter-spacing:.3px}}',
+      '.unlock-mini:hover{background:rgba(212,175,55,.32)}',
       'body.unlocked [style*="blur("],body.unlocked [data-spoiler]{filter:none!important;transform:none!important;user-select:auto!important}',
       'body.unlocked .has-blur-content::after,body.unlocked .unlock-cta,body.unlocked .unlock-mini{display:none!important}',
       'body.unlocked img[data-spoiler],body.unlocked div[data-spoiler]{filter:none!important}'
@@ -295,7 +288,7 @@
     // === Marcar cards que contienen blureados ===
     function markBlurCards(){
       var candidates = document.querySelectorAll(
-        '.premio-card, .team-card, .match-card, .stat-card, .hero-img-wrap, .group-card, .candidata-card, .sel-card'
+        '.premio-card, .team-card, .bar-row, .match-card, .stat-card, .hero-img-wrap, .group-card, .candidata-card'
       );
       candidates.forEach(function(card){
         var hasBlur = card.querySelector('[data-spoiler], [style*="blur("]');
@@ -319,12 +312,10 @@
         while (p && hops < 3){
           if (p.classList.contains('has-blur-content')) return;
           var tag = (p.tagName||'').toLowerCase();
-          // Si es un container GRANDE y NO es una barrita delgada / elemento pequeño
-          var pClasses = (p.className || '') + '';
-          var isSmallEl = /\b(bar-row|bar-wrap|bar-fill|big-pct|team-name|premio-name|premio-team|premio-pct|pct-lbl|one-liner|match-name|match-flag|flag|flag-wrap|bar-val|rank-tag|match-teams|vs|match-team|hero-eyebrow|kicker|inline-cta-btns|inline-cta-txt)\b/.test(pClasses);
-          if (tag === 'div' && p.offsetWidth > 220 && p.offsetHeight > 160 && !p.querySelector('.unlock-cta') && !isSmallEl){
-            // Verificar que sea un contenedor cohesivo (no body/section/main)
-            if (p !== document.body && p.tagName !== 'SECTION' && p.tagName !== 'MAIN' && p.tagName !== 'HEADER' && p.tagName !== 'FOOTER'){
+          // Si es un container claro y NO es la card principal del flujo
+          if (tag === 'div' && p.offsetWidth > 80 && p.offsetHeight > 40 && !p.querySelector('.unlock-cta')){
+            // Verificar que sea un contenedor cohesivo (no body)
+            if (p !== document.body && p.tagName !== 'SECTION' && p.tagName !== 'MAIN'){
               p.classList.add('has-blur-content');
               var cta = document.createElement('div');
               cta.className = 'unlock-cta';
@@ -343,7 +334,7 @@
     // === Click en cualquier elemento blureado/cartel abre el gate ===
     document.addEventListener('click', function(e){
       try { if (localStorage.getItem('gambeta_lead_ok') === '1') return; } catch(_){}
-      var ignore = e.target.closest && e.target.closest('#gambeta-gate, .gate-backdrop, .gate-card, .gate-close, #gate-close, #mundial-gate-overlay, .gate-form, .lead-form-cta, .sticky-btn, .sticky-bar, a.brand, nav a, header a, button[type="submit"]');
+      var ignore = e.target.closest && e.target.closest('#mundial-gate-overlay, .gate-form, .lead-form-cta, .sticky-btn, .sticky-bar, a.brand, nav a, header a, button[type="submit"]');
       if (ignore) return;
       var el = e.target;
       var hops = 0;
