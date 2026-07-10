@@ -565,6 +565,33 @@ footer.site-foot a { color: var(--gold); margin: 0 10px; text-decoration: none; 
   .lead-form button { padding: 13px; }
 }
 
+
+/* 🆕 (10-jul-2026) Refinamientos responsive nuevos - Track record IA + Cuartos + Ranking */
+@media (max-width: 480px){
+  .calendar-grid { gap: 12px; }
+  .match-card { padding: 16px; border-radius: 14px; }
+  .match-card .match-teams { gap: 6px; }
+  .match-card .match-flag { width: 44px; height: 30px; }
+  .match-card .match-name { font-size: 0.78rem; }
+  .match-card .vs { font-size: 0.9rem; font-weight: 900; color: var(--gold); }
+  .match-card .match-date { font-size: 0.63rem; letter-spacing: 1px; margin-bottom: 10px; }
+  .match-card .ia-prediction { font-size: 0.75rem; padding: 8px 10px; gap: 6px; line-height: 1.4; }
+  .bars .bar-row { grid-template-columns: 30px 1fr 44px; gap: 8px; }
+  .bar-fill { font-size: 0.72rem; padding: 4px 8px; }
+  .bar-val { font-size: 0.72rem; }
+  h1 { font-size: 1.85rem !important; line-height: 1.15; }
+  .mega-num { font-size: 3.2rem; }
+  .mega-num small { font-size: 1rem !important; }
+  .section-head h2 { font-size: 1.35rem; }
+  .section-head p { font-size: 0.9rem; }
+}
+@media (max-width: 360px){
+  .match-card .match-name { font-size: 0.72rem; }
+  .match-card .match-flag { width: 38px; height: 26px; }
+  .match-card .vs { font-size: 0.85rem; }
+  .match-card .ia-prediction { font-size: 0.72rem; }
+}
+
 </style>
 </head>
 <body>
