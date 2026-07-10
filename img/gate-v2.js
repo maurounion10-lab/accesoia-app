@@ -341,7 +341,7 @@
     // === Click en cualquier elemento blureado/cartel abre el gate ===
     document.addEventListener('click', function(e){
       try { if (localStorage.getItem('gambeta_lead_ok') === '1') return; } catch(_){}
-      var ignore = e.target.closest && e.target.closest('#mundial-gate-overlay, .gate-form, .lead-form-cta, .sticky-btn, .sticky-bar, a.brand, nav a, header a, button[type="submit"]');
+      var ignore = e.target.closest && e.target.closest('#gambeta-gate, .gate-backdrop, .gate-card, .gate-close, #gate-close, #mundial-gate-overlay, .gate-form, .lead-form-cta, .sticky-btn, .sticky-bar, a.brand, nav a, header a, button[type="submit"]');
       if (ignore) return;
       var el = e.target;
       var hops = 0;
