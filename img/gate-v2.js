@@ -1,8 +1,10 @@
-/* Hard-gate Mundial 2026 - Gambeta v2
+/* Soft-gate Mundial 2026 - Gambeta v2 (jugando limpio)
  * - Aparece al 75% del scroll (no por delay)
  * - Cruz X visible para cerrar
- * - Si cierra, scroll queda capped al 75% (no puede llegar al final sin email)
- * - Si scrollea mas alla, re-abre el modal
+ * - 🆕 (10-jul-2026) Si el usuario cierra el gate: RESPETAR su decisión.
+ *   No más scroll-cap forzado, no más reopen automático. Se recuerda en
+ *   localStorage por 24h y no vuelve a molestar. Los botones "Obtener
+ *   Acceso IA" siguen funcionando manual si el user cambia de opinión.
  */
 (function(){
   'use strict';
@@ -13,6 +15,14 @@
   // Acceso IA" no hacían nada.
   var _alreadyUnlocked = false;
   try { _alreadyUnlocked = (localStorage.getItem('gambeta_lead_ok') === '1'); } catch(e){}
+
+  // 🆕 (10-jul-2026) Si el usuario dismisseó el gate hace <24h, respetarlo:
+  // NO abrirlo automáticamente por scroll. Los botones manuales siguen activos.
+  var _dismissedRecently = false;
+  try {
+    var dismissedAt = parseInt(localStorage.getItem('gambeta_gate_dismissed_at') || '0', 10);
+    if (dismissedAt && (Date.now() - dismissedAt) < 24 * 3600 * 1000) _dismissedRecently = true;
+  } catch(e){}
 
   if (_alreadyUnlocked) {
     // Usuario ya tiene acceso → los botones "Obtener Acceso IA" abren un
@@ -150,26 +160,23 @@
 
   function closeGate(){
     hideGate();
+    // 🆕 (10-jul-2026) Jugar limpio: NO forzar scroll para arriba y NO reabrir.
+    // Marcamos "dismissed" para no molestar por 24h en esta sesión.
     capActive = true;
-    var cap = getMaxScrollAllowed();
-    if (window.scrollY > cap) {
-      window.scrollTo({ top: cap, behavior: 'smooth' });
-    }
+    _dismissedRecently = true;
+    try { localStorage.setItem('gambeta_gate_dismissed_at', String(Date.now())); } catch(e){}
     if (window.gtag) gtag('event','gate_close',{event_category:'mundial-gate', event_label: source});
   }
 
   function onScroll(){
+    // 🆕 (10-jul-2026) Si el user ya dismisseó (esta sesión o <24h atrás),
+    // no volver a mostrar el gate por scroll. Los botones manuales siguen ok.
+    if (capActive || _dismissedRecently) return;
     var cap = getMaxScrollAllowed();
     var currentY = window.scrollY;
-    if (!gateVisible && !capActive && currentY >= cap){
+    if (!gateVisible && currentY >= cap){
       showGate();
       if (window.gtag) gtag('event','gate_show',{event_category:'mundial-gate', event_label: source});
-      return;
-    }
-    if (!gateVisible && capActive && currentY > cap){
-      showGate();
-      window.scrollTo({ top: cap, behavior: 'auto' });
-      if (window.gtag) gtag('event','gate_reopen',{event_category:'mundial-gate', event_label: source});
     }
   }
 
