@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>MODO MUNDIAL WC26 · Acceso gratis al canal</title>
+<meta name="robots" content="noindex,nofollow">
+<meta property="og:title" content="🏆 MODO MUNDIAL WC26 — Acceso gratis">
+<meta property="og:description" content="Dejá tu mail y entrá al canal de picks del Mundial. +19.000 miembros. Gratis.">
+<meta property="og:image" content="/img/canal-avatar.jpg">
+<link rel="icon" href="/img/canal-avatar.jpg">
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-19YJJNDPSN"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag('js',new Date());gtag('config','G-19YJJNDPSN');</script>
+<style>
+  :root{ --tg:#2ea6da; --tg2:#229ed9; --bg:#0e1621; --txt:#fff; --dim:#8a9aa8; --gold:#f5cd47; }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:var(--bg); color:var(--txt);
+    min-height:100dvh; display:flex; align-items:center; justify-content:center; padding:24px 18px;
+    background-image:radial-gradient(circle at 20% 15%,rgba(46,166,218,.06),transparent 40%),radial-gradient(circle at 85% 80%,rgba(245,205,71,.05),transparent 45%);
+  }
+  .card{ width:100%; max-width:440px; text-align:center; }
+  .halo{ position:relative; width:120px; height:120px; margin:0 auto 20px; }
+  .halo::before{ content:""; position:absolute; inset:-8px; border-radius:50%; background:radial-gradient(circle,rgba(245,205,71,.35),transparent 70%); filter:blur(4px); }
+  .avatar{ position:relative; width:120px; height:120px; border-radius:50%; object-fit:cover; box-shadow:0 10px 40px rgba(0,0,0,.5); }
+  h1{ font-size:1.28rem; line-height:1.3; font-weight:800; margin-bottom:8px }
+  .subs{ color:var(--tg); font-weight:700; font-size:.95rem; margin-bottom:14px }
+  .subs b{ color:#fff }
+  .bio{ color:var(--dim); font-size:.94rem; line-height:1.5; max-width:360px; margin:0 auto 20px }
+  .bio b{ color:#fff }
+  form{ display:flex; flex-direction:column; gap:12px; margin-top:6px }
+  input{
+    width:100%; padding:16px 18px; border-radius:13px; border:1.5px solid rgba(255,255,255,.15);
+    background:rgba(255,255,255,.06); color:#fff; font-size:1rem; font-weight:600; outline:none; transition:border-color .2s;
+  }
+  input:focus{ border-color:var(--tg) }
+  input::placeholder{ color:rgba(255,255,255,.4) }
+  .btn{
+    width:100%; padding:17px 20px; border-radius:13px; border:0; cursor:pointer;
+    background:linear-gradient(135deg,var(--tg) 0%,var(--tg2) 100%); color:#fff;
+    font-size:1.08rem; font-weight:800; letter-spacing:.3px;
+    box-shadow:0 10px 30px rgba(34,158,217,.4); transition:transform .15s;
+  }
+  .btn:hover{ transform:translateY(-2px) } .btn:active{ transform:translateY(0) }
+  .btn:disabled{ opacity:.6; cursor:wait }
+  .err{ display:none; background:rgba(230,74,74,.15); border:1px solid rgba(230,74,74,.4); color:#ff9a9a; padding:11px 13px; border-radius:10px; font-size:.85rem; margin-top:4px }
+  .err.show{ display:block }
+  .fine{ margin-top:14px; font-size:.78rem; color:var(--dim) }
+  .fine a{ color:var(--tg); text-decoration:none }
+  .trust{ margin-top:20px; display:flex; gap:6px 16px; flex-wrap:wrap; justify-content:center; font-size:.78rem; color:var(--dim) }
+  .plus18{ margin-top:16px; font-size:.68rem; color:#5a6b78 }
+</style>
+</head>
+<body>
+  <main class="card">
+    <div class="halo"><img class="avatar" src="/img/canal-avatar.jpg" alt="MODO MUNDIAL WC26" width="120" height="120"></div>
+    <h1>🏆 MODO MUNDIAL WC26<br>Apuestas Latam · Picks & Bets</h1>
+    <div class="subs"><b>19.058</b> suscriptores · <b style="color:#4bcb5c">activo</b></div>
+    <p class="bio">Dejá tu mail y te damos <b>acceso gratis</b> al canal: picks del Mundial 2026 con análisis, todos los días. 💰</p>
+
+    <form id="f" novalidate>
+      <input type="email" id="email" placeholder="tu@email.com" autocomplete="email" inputmode="email" required>
+      <button type="submit" class="btn" id="btn">Entrar al canal gratis →</button>
+      <div class="err" id="err"></div>
+    </form>
+
+    <p class="fine">Sin spam. Te podés dar de baja cuando quieras. ·
+      <a href="https://t.me/GrupoLatam" id="skip" target="_blank" rel="noopener">Entrar sin mail</a></p>
+
+    <div class="trust">
+      <span>✅ +19.000 miembros</span>
+      <span>⚽ Picks a diario</span>
+      <span>🆓 Gratis</span>
+    </div>
+    <p class="plus18">Solo mayores de 18. Contenido informativo. Jugá con responsabilidad.</p>
+  </main>
+
+<script>
+  var TG_APP='tg://resolve?domain=GrupoLatam', TG_WEB='https://t.me/GrupoLatam';
+  function gotoTelegram(){
+    if(window.gtag) gtag('event','goto_telegram',{location:'canal_form'});
+    var t=Date.now();
+    setTimeout(function(){ if(Date.now()-t<2200) window.location.href=TG_WEB; }, 900);
+    window.location.href=TG_APP;
+  }
+  document.getElementById('skip').addEventListener('click',function(){ if(window.gtag) gtag('event','telegram_join_click',{location:'canal_form_skip'}); });
+  document.getElementById('f').addEventListener('submit', async function(e){
+    e.preventDefault();
+    var err=document.getElementById('err'), input=document.getElementById('email'), btn=document.getElementById('btn');
+    err.classList.remove('show');
+    var email=(input.value||'').trim().toLowerCase();
+    if(!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){ err.textContent='Email inválido — revisalo.'; err.classList.add('show'); return; }
+    btn.disabled=true; btn.textContent='Entrando…';
+    try{
+      await fetch('https://api.accesoia.app/api/lead-signup',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:email,source:'canal-telegram',landing:'canal-form'})});
+      if(window.gtag) gtag('event','lead_capture',{location:'canal_form'});
+    }catch(_){ /* aunque falle el guardado, no bloqueamos el acceso al canal */ }
+    gotoTelegram();
+  });
+</script>
+</body>
+</html>
